@@ -1,17 +1,18 @@
 package mimic
 
 import (
-	utls "github.com/hunterbdm/hello-requests/utls"
 	"strings"
+
+	utls "github.com/RealKonik/hello-requests/utls"
 )
 
 const (
-	H2SettingHeaderTableSize       = 0x1
-	H2SettingEnablePush            = 0x2
-	H2SettingMaxConcurrentStreams  = 0x3
-	H2SettingInitialWindowSize     = 0x4
-	H2SettingMaxFrameSize          = 0x5
-	H2SettingMaxHeaderListSize     = 0x6
+	H2SettingHeaderTableSize      = 0x1
+	H2SettingEnablePush           = 0x2
+	H2SettingMaxConcurrentStreams = 0x3
+	H2SettingInitialWindowSize    = 0x4
+	H2SettingMaxFrameSize         = 0x5
+	H2SettingMaxHeaderListSize    = 0x6
 )
 
 var (
@@ -87,7 +88,7 @@ var (
 							{Group: utls.CurveID(utls.GREASE_PLACEHOLDER), Data: []byte{0}},
 							{Group: utls.X25519},
 						}},
-						&utls.PSKKeyExchangeModesExtension{
+					&utls.PSKKeyExchangeModesExtension{
 						Modes: []uint8{
 							utls.PskModeDHE,
 						}},
@@ -222,28 +223,28 @@ var (
 	}
 
 	mimicSettingsMap = map[string]Settings{
-		"chrome": chromeMimic,
+		"chrome":   chromeMimic,
 		"chrome83": chromeMimic,
-		"firefox": firefoxMimic,
+		"firefox":  firefoxMimic,
 	}
 )
 
 type H2Setting struct {
-	ID uint16
+	ID  uint16
 	Val uint32
 }
 
 type H2PriorityFrame struct {
-	StreamID uint32
+	StreamID  uint32
 	Exclusive bool
 	StreamDep uint32
-	Weight uint8
+	Weight    uint8
 }
 
 type Settings struct {
-	H2HeaderOrder []string
-	H2Settings []H2Setting
-	H2StreamFlow uint32
+	H2HeaderOrder    []string
+	H2Settings       []H2Setting
+	H2StreamFlow     uint32
 	H2PriorityFrames []H2PriorityFrame
 
 	ClientHello func() *utls.ClientHelloSpec

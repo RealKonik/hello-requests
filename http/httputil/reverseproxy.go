@@ -12,12 +12,13 @@ import (
 	"io"
 	"log"
 	"net"
-	"github.com/hunterbdm/hello-requests/http"
 	"net/textproto"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/RealKonik/hello-requests/http"
 
 	"golang.org/x/net/http/httpguts"
 )

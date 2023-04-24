@@ -13,12 +13,13 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
-	"github.com/hunterbdm/hello-requests/http"
-	"github.com/hunterbdm/hello-requests/http/cgi"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/RealKonik/hello-requests/http"
+	"github.com/RealKonik/hello-requests/http/cgi"
 )
 
 // request holds the state for an in-progress request. As soon as it's complete,

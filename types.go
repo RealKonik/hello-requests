@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hunterbdm/hello-requests/http/cookiejar"
+	"github.com/RealKonik/hello-requests/http/cookiejar"
 )
 
 type Headers map[string]string

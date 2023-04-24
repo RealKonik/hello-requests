@@ -9,9 +9,10 @@ import (
 	"errors"
 	"io"
 	"net"
-	"github.com/hunterbdm/hello-requests/http"
 	"net/textproto"
 	"sync"
+
+	"github.com/RealKonik/hello-requests/http"
 )
 
 var (

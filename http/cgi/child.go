@@ -9,17 +9,19 @@ package cgi
 
 import (
 	"bufio"
-	"github.com/hunterbdm/hello-requests/utls"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
-	"github.com/hunterbdm/hello-requests/http"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
+
+	tls "github.com/RealKonik/hello-requests/utls"
+
+	"github.com/RealKonik/hello-requests/http"
 )
 
 // Request returns the HTTP request as represented in the current

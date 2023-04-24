@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hunterbdm/hello-requests/utls/cpu"
+	"github.com/RealKonik/hello-requests/utls/cpu"
 )
 
 const (

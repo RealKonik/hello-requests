@@ -2,12 +2,13 @@ package utils
 
 import (
 	"errors"
-	"golang.org/x/net/http/httpguts"
-	"github.com/hunterbdm/hello-requests/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/RealKonik/hello-requests/http"
+	"golang.org/x/net/http/httpguts"
 )
 
 func ParseProxy(p string) (*url.URL, error) {

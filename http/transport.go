@@ -28,10 +28,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/RealKonik/hello-requests/http/httptrace"
+	"github.com/RealKonik/hello-requests/mimic"
+	tls "github.com/RealKonik/hello-requests/utls"
 	"github.com/gwatts/rootcerts"
-	"github.com/hunterbdm/hello-requests/http/httptrace"
-	"github.com/hunterbdm/hello-requests/mimic"
-	tls "github.com/hunterbdm/hello-requests/utls"
 	"github.com/tam7t/hpkp"
 
 	"golang.org/x/net/http/httpguts"

@@ -5,13 +5,14 @@
 package http
 
 import (
-	"github.com/hunterbdm/hello-requests/http/httptrace"
 	"io"
 	"net/textproto"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/RealKonik/hello-requests/http/httptrace"
 )
 
 // A Header represents the key-value pairs in an HTTP header.

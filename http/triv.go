@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build ignore
 // +build ignore
 
 package main
@@ -13,11 +14,12 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"github.com/hunterbdm/hello-requests/http"
 	"os"
 	"os/exec"
 	"strconv"
 	"sync"
+
+	"github.com/RealKonik/hello-requests/http"
 )
 
 // hello world, the web server

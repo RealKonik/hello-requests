@@ -10,15 +10,16 @@
 // The handled paths all begin with /debug/pprof/.
 //
 // To use pprof, link this package into your program:
-//	import _ "github.com/hunterbdm/hello-requests/http/pprof"
+//
+//	import _ "github.com/RealKonik/hello-requests/http/pprof"
 //
 // If your application is not already running an http server, you
-// need to start one. Add "github.com/hunterbdm/hello-requests/http" and "log" to your imports and
+// need to start one. Add "github.com/RealKonik/hello-requests/http" and "log" to your imports and
 // the following code to your main function:
 //
-// 	go func() {
-// 		log.Println(http.ListenAndServe("localhost:6060", nil))
-// 	}()
+//	go func() {
+//		log.Println(http.ListenAndServe("localhost:6060", nil))
+//	}()
 //
 // If you are not using DefaultServeMux, you will have to register handlers
 // with the mux you are using.
@@ -53,7 +54,6 @@
 // For a study of the facility in action, visit
 //
 //	https://blog.golang.org/2011/06/profiling-go-programs.html
-//
 package pprof
 
 import (
@@ -62,10 +62,8 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"github.com/hunterbdm/hello-requests/internal/profile"
 	"io"
 	"log"
-	"github.com/hunterbdm/hello-requests/http"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -74,6 +72,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/RealKonik/hello-requests/http"
+	"github.com/RealKonik/hello-requests/internal/profile"
 )
 
 func init() {
