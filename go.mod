@@ -12,4 +12,4 @@ require (
 	golang.org/x/net v0.9.0
 )
 
-replace github.com/hunterbdm/hello-requests => ./
+replace github.com/hunterbdm/hello-requests v0.0.0-00010101000000-000000000000 => ./
