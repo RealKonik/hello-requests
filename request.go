@@ -5,13 +5,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"strings"
+	"time"
+
 	"github.com/hunterbdm/hello-requests/compress"
 	"github.com/hunterbdm/hello-requests/http"
 	"github.com/hunterbdm/hello-requests/http/cookiejar"
 	"github.com/hunterbdm/hello-requests/utils"
-	"io/ioutil"
-	"strings"
-	"time"
 )
 
 // Features:
@@ -26,6 +27,7 @@ import (
 // - Custom idle connection timeouts (done)
 // - Custom request timeouts (done)
 // - Brotli decompression (done)
+// - SSL pinning (done)
 
 // utls additions/fixes:
 //
@@ -90,7 +92,8 @@ func request(opts Options, previous *Response) (*Response, error) {
 	// Build http.Request to pass into the http.Client
 	var req *http.Request
 	if opts.Base64Body {
-		byteBody, err := base64Decode([]byte(opts.Body))
+		var byteBody []byte
+		byteBody, err = base64Decode([]byte(opts.Body))
 		if err != nil {
 			return nil, errors.New("bad base64 body")
 		}
@@ -164,7 +167,7 @@ func request(opts Options, previous *Response) (*Response, error) {
 		Json:       jsonParsed,
 		Request:    &opts,
 		Time:       int(end - start),
-		Previous: 	previous,
+		Previous:   previous,
 	}
 
 	// Return redirected response if we are following redirects
@@ -180,7 +183,6 @@ func request(opts Options, previous *Response) (*Response, error) {
 		delete(newHeaders, "host")
 		delete(newHeaders, "Host")
 
-
 		url := loc[0]
 		// Check if the baseUrl is included in the location header
 		if strings.Index(url, "/") == 0 {
@@ -188,12 +190,12 @@ func request(opts Options, previous *Response) (*Response, error) {
 		}
 
 		newOpts := Options{
-			URL: url,
-			Headers: newHeaders,
-			HeaderOrder: opts.HeaderOrder,
-			Jar: opts.Jar,
-			ClientSettings: opts.ClientSettings,
-			FollowRedirects: opts.FollowRedirects,
+			URL:               url,
+			Headers:           newHeaders,
+			HeaderOrder:       opts.HeaderOrder,
+			Jar:               opts.Jar,
+			ClientSettings:    opts.ClientSettings,
+			FollowRedirects:   opts.FollowRedirects,
 			ParseJSONResponse: opts.ParseJSONResponse,
 		}
 

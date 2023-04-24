@@ -16,10 +16,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gwatts/rootcerts"
-	"github.com/hunterbdm/hello-requests/http/httptrace"
-	"github.com/hunterbdm/hello-requests/mimic"
-	"github.com/hunterbdm/hello-requests/utls"
 	"io"
 	"log"
 	"net"
@@ -31,6 +27,12 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/gwatts/rootcerts"
+	"github.com/hunterbdm/hello-requests/http/httptrace"
+	"github.com/hunterbdm/hello-requests/mimic"
+	tls "github.com/hunterbdm/hello-requests/utls"
+	"github.com/tam7t/hpkp"
 
 	"golang.org/x/net/http/httpguts"
 	"golang.org/x/net/http/httpproxy"
@@ -274,10 +276,11 @@ type Transport struct {
 	// upgrades, set this to true.
 	ForceAttemptHTTP2 bool
 
-	// [hello-requests] added MimicSettings here
-	MimicSettings *mimic.Settings
-	SkipCertChecks bool
+	// [hello-requests] added MimicSettings and SSLPinStorage here
+	MimicSettings    *mimic.Settings
+	SkipCertChecks   bool
 	CustomServerName string
+	SSLPinStorage    hpkp.Storage
 }
 
 // A cancelKey is the key of the reqCanceler map.
@@ -1722,6 +1725,26 @@ func (t *Transport) dialConn(ctx context.Context, cm connectMethod) (pconn *pers
 			return nil, err
 		}
 	}
+	//[hello-requests] added ssl pinning
+	if t.SSLPinStorage != nil {
+		if h := t.SSLPinStorage.Lookup(strings.Split(cm.targetAddr, ":")[0]); h != nil {
+			// intermediates can be pinned as well, loop through leaf-> root looking
+			// for pin matches
+			validPin := false
+			var issuer string
+			for _, peercert := range pconn.tlsState.PeerCertificates {
+				peerPin := hpkp.Fingerprint(peercert)
+				issuer = peercert.Issuer.String()
+				if h.Matches(peerPin) {
+					validPin = true
+					break
+				}
+			}
+			if !validPin {
+				return nil, fmt.Errorf("invalid pin, proxy Url = %s, issuer = %s", cm.proxyURL, issuer)
+			}
+		}
+	}
 
 	if s := pconn.tlsState; s != nil && s.NegotiatedProtocolIsMutual && s.NegotiatedProtocol != "" {
 		if next, ok := t.TLSNextProto[s.NegotiatedProtocol]; ok {
@@ -1785,7 +1808,6 @@ var _ io.ReaderFrom = (*persistConnWriter)(nil)
 //	socks5://proxy.com|https|foo.com  socks5 to proxy, then https to foo.com
 //	https://proxy.com|https|foo.com   https to proxy, then CONNECT to foo.com
 //	https://proxy.com|http            https to proxy, http to anywhere after that
-//
 type connectMethod struct {
 	_            incomparable
 	proxyURL     *url.URL // nil for no proxy, else full proxy URL

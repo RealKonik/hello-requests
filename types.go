@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hunterbdm/hello-requests/http/cookiejar"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/hunterbdm/hello-requests/http/cookiejar"
 )
 
 type Headers map[string]string
@@ -17,15 +18,15 @@ type HeaderOrder []string
 type JSON map[string]interface{}
 
 type Options struct {
-	Method      string `json:"Method"`
-	URL         string `json:"URL"`
-	Headers     Headers `json:"Headers"`
+	Method      string      `json:"Method"`
+	URL         string      `json:"URL"`
+	Headers     Headers     `json:"Headers"`
 	HeaderOrder HeaderOrder `json:"HeaderOrder"`
-	Body        string `json:"Body"`
-	Json        JSON `json:"Json"`
-	Form        JSON `json:"Form"`
-	QS          JSON `json:"QS"`
-	Base64Body  bool `json:"Base64Body"`
+	Body        string      `json:"Body"`
+	Json        JSON        `json:"Json"`
+	Form        JSON        `json:"Form"`
+	QS          JSON        `json:"QS"`
+	Base64Body  bool        `json:"Base64Body"`
 
 	Jar            *cookiejar.Jar
 	ClientSettings *ClientSettings `json:"ClientSettings"`
@@ -37,13 +38,13 @@ type Options struct {
 }
 
 type Response struct {
-	StatusCode int `json:"StatusCode"`
+	StatusCode int                 `json:"StatusCode"`
 	Headers    map[string][]string `json:"Headers"`
-	Body       string `json:"Body"`
-	Json       JSON `json:"Json"`
-	Request    *Options `json:"Request"`
-	Previous   *Response `json:"Previous"`
-	Time       int `json:"Time"`
+	Body       string              `json:"Body"`
+	Json       JSON                `json:"Json"`
+	Request    *Options            `json:"Request"`
+	Previous   *Response           `json:"Previous"`
+	Time       int                 `json:"Time"`
 }
 
 func (o *Options) Validate() (*url.URL, error) {
@@ -63,7 +64,6 @@ func (o *Options) Validate() (*url.URL, error) {
 	//for i, header := range o.HeaderOrder {
 	//	o.HeaderOrder[i] = textproto.CanonicalMIMEHeaderKey(header)
 	//}
-
 
 	// Stringify JSON body if provided
 	if o.Json != nil {

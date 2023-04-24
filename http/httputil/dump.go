@@ -12,10 +12,11 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
-	"github.com/hunterbdm/hello-requests/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/hunterbdm/hello-requests/http"
 )
 
 // drainBody reads all of b to memory and then returns two equivalent
@@ -256,7 +257,7 @@ func DumpRequest(req *http.Request, body bool) ([]byte, error) {
 		fmt.Fprintf(&b, "Connection: close\r\n")
 	}
 
-	err = req.Header.WriteSubset(&b, reqWriteExcludeHeaderDump)
+	err = req.Header.WriteSubset(&b, reqWriteExcludeHeaderDump, []string{})
 	if err != nil {
 		return nil, err
 	}

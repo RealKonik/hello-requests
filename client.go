@@ -1,33 +1,37 @@
 package request
 
 import (
-	"github.com/hunterbdm/hello-requests/http"
-	"github.com/hunterbdm/hello-requests/mimic"
-	"github.com/hunterbdm/hello-requests/utils"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/hunterbdm/hello-requests/http"
+	"github.com/hunterbdm/hello-requests/mimic"
+	"github.com/hunterbdm/hello-requests/utils"
+	"github.com/tam7t/hpkp"
 )
 
 var (
 	defaultClientSettings = ClientSettings{
-		IdleTimeoutTime: 10000,
+		IdleTimeoutTime:    10000,
 		RequestTimeoutTime: 10000,
-		MimicBrowser: "chrome",
+		MimicBrowser:       "chrome",
 	}
 
-	httpClientMap = map[string]http.Client{}
+	httpClientMap      = map[string]http.Client{}
 	httpClientMapMutex = sync.RWMutex{}
 )
 
 type ClientSettings struct {
-	IdleTimeoutTime int `json:"IdleTimeoutTime"`
+	IdleTimeoutTime    int `json:"IdleTimeoutTime"`
 	RequestTimeoutTime int `json:"RequestTimeoutTime"`
 
 	SkipCertChecks bool `json:"SkipCertChecks"`
 
-	Proxy string `json:"Proxy"`
+	Proxy        string `json:"Proxy"`
 	MimicBrowser string `json:"MimicBrowser"`
+
+	CertStorage hpkp.Storage
 
 	CustomServerName string
 }
@@ -56,7 +60,6 @@ func (cs *ClientSettings) AddDefaults() {
 		cs.MimicBrowser = defaultClientSettings.MimicBrowser
 	}
 }
-
 
 // SetDefaultClientSettings overrides default ClientSettings config
 func SetDefaultClientSettings(cs ClientSettings) {
@@ -89,10 +92,14 @@ func setupHttpClient(cs *ClientSettings) http.Client {
 	mimicSettings := mimic.GetMimicSettings(cs.MimicBrowser)
 
 	tp := http.Transport{
-		IdleConnTimeout: time.Millisecond * time.Duration(cs.IdleTimeoutTime),
-		MimicSettings: mimicSettings,
-		SkipCertChecks: cs.SkipCertChecks,
+		IdleConnTimeout:  time.Millisecond * time.Duration(cs.IdleTimeoutTime),
+		MimicSettings:    mimicSettings,
+		SkipCertChecks:   cs.SkipCertChecks,
 		CustomServerName: cs.CustomServerName,
+	}
+
+	if cs.CertStorage != nil {
+		tp.SSLPinStorage = cs.CertStorage
 	}
 
 	// Add proxy to Transport
@@ -105,7 +112,7 @@ func setupHttpClient(cs *ClientSettings) http.Client {
 	}
 
 	client := http.Client{
-		Timeout: time.Millisecond * time.Duration(cs.RequestTimeoutTime),
+		Timeout:   time.Millisecond * time.Duration(cs.RequestTimeoutTime),
 		Transport: &tp,
 	}
 
