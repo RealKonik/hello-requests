@@ -1742,7 +1742,9 @@ func (t *Transport) dialConn(ctx context.Context, cm connectMethod) (pconn *pers
 				}
 			}
 			if !validPin {
-				t.AlertFunction(fmt.Sprintf("invalid pin, proxy Url = %s, issuer = %s", cm.proxyURL, issuer))
+				if t.AlertFunction != nil {
+					t.AlertFunction(fmt.Sprintf("invalid pin, proxy Url = %s, issuer = %s", cm.proxyURL, issuer))
+				}
 				return nil, fmt.Errorf("invalid pin, proxy Url = %s, issuer = %s", cm.proxyURL, issuer)
 			}
 		}
