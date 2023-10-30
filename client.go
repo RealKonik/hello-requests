@@ -31,7 +31,8 @@ type ClientSettings struct {
 	Proxy        string `json:"Proxy"`
 	MimicBrowser string `json:"MimicBrowser"`
 
-	CertStorage hpkp.Storage
+	CertStorage   hpkp.Storage
+	AlertFunction func(string)
 
 	CustomServerName string
 }
@@ -100,6 +101,9 @@ func setupHttpClient(cs *ClientSettings) http.Client {
 
 	if cs.CertStorage != nil {
 		tp.SSLPinStorage = cs.CertStorage
+	}
+	if cs.AlertFunction != nil {
+		tp.AlertFunction = cs.AlertFunction
 	}
 
 	// Add proxy to Transport

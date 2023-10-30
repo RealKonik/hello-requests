@@ -276,11 +276,12 @@ type Transport struct {
 	// upgrades, set this to true.
 	ForceAttemptHTTP2 bool
 
-	// [hello-requests] added MimicSettings and SSLPinStorage here
+	// [hello-requests] added MimicSettings, AlertFunction and SSLPinStorage here
 	MimicSettings    *mimic.Settings
 	SkipCertChecks   bool
 	CustomServerName string
 	SSLPinStorage    hpkp.Storage
+	AlertFunction    func(string)
 }
 
 // A cancelKey is the key of the reqCanceler map.
@@ -1741,6 +1742,7 @@ func (t *Transport) dialConn(ctx context.Context, cm connectMethod) (pconn *pers
 				}
 			}
 			if !validPin {
+				t.AlertFunction(fmt.Sprintf("invalid pin, proxy Url = %s, issuer = %s", cm.proxyURL, issuer))
 				return nil, fmt.Errorf("invalid pin, proxy Url = %s, issuer = %s", cm.proxyURL, issuer)
 			}
 		}
