@@ -335,7 +335,7 @@ var (
 					},
 					&utls.KeyShareExtension{
 						KeyShares: []utls.KeyShare{
-							{Group: utls.CurveID(4588)},
+							{Group: utls.CurveID(4588), Data: make([]byte, 32)},
 							{Group: utls.X25519},
 							{Group: utls.CurveP256},
 						}},
