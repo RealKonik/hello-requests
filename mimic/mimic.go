@@ -266,20 +266,6 @@ var (
 			{ID: H2SettingMaxFrameSize, Val: 16384},
 		},
 		H2StreamFlow: 12517377,
-		H2PriorityFrames: []H2PriorityFrame{
-			// 3:0:0:201
-			{StreamID: 3, Exclusive: false, StreamDep: 0, Weight: 201},
-			// 5:0:0:101
-			{StreamID: 5, Exclusive: false, StreamDep: 0, Weight: 101},
-			// 7:0:0:1
-			{StreamID: 7, Exclusive: false, StreamDep: 0, Weight: 1},
-			// 9:0:7:1
-			{StreamID: 9, Exclusive: false, StreamDep: 7, Weight: 1},
-			// 11:0:3:1
-			{StreamID: 11, Exclusive: false, StreamDep: 3, Weight: 1},
-			// 13:0:0:241
-			{StreamID: 13, Exclusive: false, StreamDep: 0, Weight: 241},
-		},
 
 		ClientHello: func() *utls.ClientHelloSpec {
 			return &utls.ClientHelloSpec{
