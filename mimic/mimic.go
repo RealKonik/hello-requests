@@ -371,11 +371,11 @@ var (
 						},
 					},
 					// ECH
-					&utls.GenericExtension{
+					/* &utls.GenericExtension{
 						Id:   extensionEncryptedClientHello,
 						Data: []byte{0x00},
-					},
-					&FakePreSharedKeyExtension{GenericExtension: &utls.GenericExtension{}},
+					}, */
+					//&FakePreSharedKeyExtension{GenericExtension: &utls.GenericExtension{}},
 				},
 				TLSVersMax: utls.VersionTLS13,
 				TLSVersMin: utls.VersionTLS10,
