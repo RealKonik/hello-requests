@@ -13,7 +13,7 @@ import (
 	"reflect"
 	"time"
 
-	tls "github.com/RealKonik/hello-requests/utls"
+	tls "github.com/refraction-networking/utls"
 
 	"github.com/RealKonik/hello-requests/internal/nettrace"
 )

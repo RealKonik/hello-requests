@@ -30,8 +30,8 @@ import (
 
 	"github.com/RealKonik/hello-requests/http/httptrace"
 	"github.com/RealKonik/hello-requests/mimic"
-	tls "github.com/RealKonik/hello-requests/utls"
 	"github.com/gwatts/rootcerts"
+	tls "github.com/refraction-networking/utls"
 	"github.com/tam7t/hpkp"
 
 	"golang.org/x/net/http/httpguts"

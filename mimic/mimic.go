@@ -4,7 +4,7 @@ import (
 	"io"
 	"strings"
 
-	utls "github.com/RealKonik/hello-requests/utls"
+	utls "github.com/refraction-networking/utls"
 )
 
 const (
@@ -131,11 +131,11 @@ var (
 							utls.VersionTLS11,
 							utls.VersionTLS10,
 						}},
-					&utls.CompressCertificateExtension{
+					&utls.UtlsCompressCertExtension{
 						Algorithms: []utls.CertCompressionAlgo{
 							utls.CertCompressionBrotli,
 						}},
-					&utls.FakeApplicationSettingsExtension{},
+					&utls.ApplicationSettingsExtension{},
 					&utls.UtlsGREASEExtension{},
 					&utls.UtlsPaddingExtension{GetPaddingLen: utls.BoringPaddingStyle},
 				},
@@ -363,7 +363,7 @@ var (
 							utls.PskModeDHE,
 						}},
 					&utls.FakeRecordSizeLimitExtension{Limit: 0x4001},
-					&utls.CompressCertificateExtension{
+					&utls.UtlsCompressCertExtension{
 						Algorithms: []utls.CertCompressionAlgo{
 							utls.CertCompressionZlib,
 							utls.CertCompressionBrotli,
@@ -375,7 +375,24 @@ var (
 						Id:   extensionEncryptedClientHello,
 						Data: []byte{0x00},
 					},
-					//&FakePreSharedKeyExtension{GenericExtension: &utls.GenericExtension{}},
+					&utls.FakePreSharedKeyExtension{
+						Identities: []utls.PskIdentity{
+							{
+								Label: []byte("0077007192957c602a0cdde2222403e0cae6f654e0c76147dde07ccd209265d3c612d7056fc483d392092eea203be37708394578cdbe8aabd4e89227b39a7627705a3166f2a401a2f4ac5dd99b47cab161576a02c32f4b5702cd8b613f7ecd351716d45a7870d309c6ecfc44bccad001d5e93e8f79f28c4553002120fa19e18c5682b16d48ecf258efe9ed7d066a3e62fe60c3ab9caf458785363a91"), // or bytes from your capture
+								// In real traffic this is ticket_age + age_add, but for JA3
+								// you can just match the captured value or leave 0.
+								ObfuscatedTicketAge: 0,
+							},
+						},
+						// Binder length must match the hash for the chosen TLS 1.3 cipher:
+						// - SHA256-based suite -> 32 bytes
+						// - SHA384-based suite -> 48 bytes
+						// For JA3-only you can fill with zeros; the server will probably
+						// reject the PSK, but the fingerprint is there.
+						Binders: [][]byte{
+							make([]byte, 32), // zero binder, but correct length
+						},
+					},
 				},
 				TLSVersMax: utls.VersionTLS13,
 				TLSVersMin: utls.VersionTLS10,

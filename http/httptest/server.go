@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	tls "github.com/RealKonik/hello-requests/utls"
+	tls "github.com/refraction-networking/utls"
 
 	"github.com/RealKonik/hello-requests/http"
 	"github.com/RealKonik/hello-requests/http/internal"

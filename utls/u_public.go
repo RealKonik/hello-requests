@@ -632,3 +632,27 @@ func (css *ClientSessionState) SetServerCertificates(ServerCertificates []*x509.
 func (css *ClientSessionState) SetVerifiedChains(VerifiedChains [][]*x509.Certificate) {
 	css.verifiedChains = VerifiedChains
 }
+
+type PskIdentity struct {
+	Label               []byte `json:"identity"`
+	ObfuscatedTicketAge uint32 `json:"obfuscated_ticket_age"`
+}
+
+type PskIdentities []PskIdentity
+type pskIdentities []pskIdentity
+
+func (pss pskIdentities) ToPublic() []PskIdentity {
+	var PSS []PskIdentity
+	for _, ps := range pss {
+		PSS = append(PSS, PskIdentity{Label: ps.label, ObfuscatedTicketAge: ps.obfuscatedTicketAge})
+	}
+	return PSS
+}
+
+func (PSS PskIdentities) ToPrivate() []pskIdentity {
+	var pss []pskIdentity
+	for _, PS := range PSS {
+		pss = append(pss, pskIdentity{label: PS.Label, obfuscatedTicketAge: PS.ObfuscatedTicketAge})
+	}
+	return pss
+}

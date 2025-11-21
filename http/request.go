@@ -26,7 +26,7 @@ import (
 	"sync"
 
 	"github.com/RealKonik/hello-requests/http/httptrace"
-	tls "github.com/RealKonik/hello-requests/utls"
+	tls "github.com/refraction-networking/utls"
 
 	"golang.org/x/net/idna"
 )
