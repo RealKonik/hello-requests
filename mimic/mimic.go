@@ -1,6 +1,7 @@
 package mimic
 
 import (
+	"io"
 	"strings"
 
 	utls "github.com/RealKonik/hello-requests/utls"
@@ -13,7 +14,37 @@ const (
 	H2SettingInitialWindowSize    = 0x4
 	H2SettingMaxFrameSize         = 0x5
 	H2SettingMaxHeaderListSize    = 0x6
+
+	X25519MLKEM768 = 4588
+
+	extensionEncryptedClientHello uint16 = 0xfe0d
+	extensionPreSharedKey         uint16 = 41
 )
+
+// --- pre_shared_key (41) ---
+// Also minimal: zero-length PSK extension.
+// Not spec-correct, but JA3 only needs to see ID 41.
+
+type FakePreSharedKeyExtension struct {
+	*utls.GenericExtension
+}
+
+func (e *FakePreSharedKeyExtension) Len() int {
+	return 4
+}
+
+func (e *FakePreSharedKeyExtension) Read(b []byte) (int, error) {
+	if len(b) < e.Len() {
+		return 0, io.ErrShortBuffer
+	}
+	// type = 41 (0x0029)
+	b[0] = 0x00
+	b[1] = 0x29
+	// length = 0
+	b[2] = 0x00
+	b[3] = 0x00
+	return e.Len(), io.EOF
+}
 
 var (
 	// Chrome h2 fingerprint: 1:65536;3:1000;4:6291456;6:262144|15663105||m,a,s,p
@@ -221,11 +252,142 @@ var (
 			}
 		},
 	}
+	firefox145Mimic = Settings{
+		H2HeaderOrder: []string{
+			":method",
+			":path",
+			":authority",
+			":scheme",
+		},
+		H2Settings: []H2Setting{
+			{ID: H2SettingHeaderTableSize, Val: 65536},
+			{ID: H2SettingEnablePush, Val: 0},
+			{ID: H2SettingInitialWindowSize, Val: 131072},
+			{ID: H2SettingMaxFrameSize, Val: 16384},
+		},
+		H2StreamFlow: 12517377,
+		H2PriorityFrames: []H2PriorityFrame{
+			// 3:0:0:201
+			{StreamID: 3, Exclusive: false, StreamDep: 0, Weight: 201},
+			// 5:0:0:101
+			{StreamID: 5, Exclusive: false, StreamDep: 0, Weight: 101},
+			// 7:0:0:1
+			{StreamID: 7, Exclusive: false, StreamDep: 0, Weight: 1},
+			// 9:0:7:1
+			{StreamID: 9, Exclusive: false, StreamDep: 7, Weight: 1},
+			// 11:0:3:1
+			{StreamID: 11, Exclusive: false, StreamDep: 3, Weight: 1},
+			// 13:0:0:241
+			{StreamID: 13, Exclusive: false, StreamDep: 0, Weight: 241},
+		},
+
+		ClientHello: func() *utls.ClientHelloSpec {
+			return &utls.ClientHelloSpec{
+				CipherSuites: []uint16{
+					utls.TLS_AES_128_GCM_SHA256,
+					utls.TLS_CHACHA20_POLY1305_SHA256,
+					utls.TLS_AES_256_GCM_SHA384,
+					utls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+					utls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+					utls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+					utls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+					utls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+					utls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+					utls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+					utls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+					utls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+					utls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+					utls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+					utls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+					utls.TLS_RSA_WITH_AES_128_CBC_SHA,
+					utls.TLS_RSA_WITH_AES_256_CBC_SHA,
+				},
+				CompressionMethods: []byte{0x00},
+				Extensions: []utls.TLSExtension{
+					&utls.SNIExtension{},
+					&utls.UtlsExtendedMasterSecretExtension{},
+					&utls.RenegotiationInfoExtension{Renegotiation: utls.RenegotiateOnceAsClient},
+					&utls.SupportedCurvesExtension{
+						Curves: []utls.CurveID{
+							utls.CurveID(4588), //X25519MLKEM768
+							utls.X25519,
+							utls.CurveP256,
+							utls.CurveP384,
+							utls.CurveP521,
+							utls.CurveID(256),
+							utls.CurveID(257),
+						}},
+					&utls.SupportedPointsExtension{SupportedPoints: []byte{0x00}},
+					&utls.ALPNExtension{AlpnProtocols: []string{"h2", "http/1.1"}},
+					&utls.StatusRequestExtension{},
+					&utls.FakeDelegatedCredentialsExtension{
+						SupportedSignatureAlgorithms: []utls.SignatureScheme{
+							utls.ECDSAWithP256AndSHA256,
+							utls.ECDSAWithP384AndSHA384,
+							utls.ECDSAWithP521AndSHA512,
+							utls.ECDSAWithSHA1,
+						},
+					},
+					//signed_certificate_timestamp
+					&utls.GenericExtension{
+						Id:   18,       // signed_certificate_timestamp
+						Data: []byte{}, // zero-length as in real browsers
+					},
+					&utls.KeyShareExtension{
+						KeyShares: []utls.KeyShare{
+							{Group: utls.CurveID(4588)},
+							{Group: utls.X25519},
+							{Group: utls.CurveP256},
+						}},
+					&utls.SupportedVersionsExtension{
+						Versions: []uint16{
+							utls.VersionTLS13,
+							utls.VersionTLS12,
+						}},
+					&utls.SignatureAlgorithmsExtension{
+						SupportedSignatureAlgorithms: []utls.SignatureScheme{
+							utls.ECDSAWithP256AndSHA256,
+							utls.ECDSAWithP384AndSHA384,
+							utls.ECDSAWithP521AndSHA512,
+							utls.PSSWithSHA256,
+							utls.PSSWithSHA384,
+							utls.PSSWithSHA512,
+							utls.PKCS1WithSHA256,
+							utls.PKCS1WithSHA384,
+							utls.PKCS1WithSHA512,
+							utls.ECDSAWithSHA1,
+							utls.PKCS1WithSHA1,
+						}},
+					&utls.PSKKeyExchangeModesExtension{
+						Modes: []uint8{
+							utls.PskModeDHE,
+						}},
+					&utls.FakeRecordSizeLimitExtension{Limit: 0x4001},
+					&utls.CompressCertificateExtension{
+						Algorithms: []utls.CertCompressionAlgo{
+							utls.CertCompressionZlib,
+							utls.CertCompressionBrotli,
+							utls.CertCompressionZstd,
+						},
+					},
+					// ECH
+					&utls.GenericExtension{
+						Id:   extensionEncryptedClientHello,
+						Data: []byte{0x00},
+					},
+					&FakePreSharedKeyExtension{GenericExtension: &utls.GenericExtension{}},
+				},
+				TLSVersMax: utls.VersionTLS13,
+				TLSVersMin: utls.VersionTLS10,
+			}
+		},
+	}
 
 	mimicSettingsMap = map[string]Settings{
-		"chrome":   chromeMimic,
-		"chrome83": chromeMimic,
-		"firefox":  firefoxMimic,
+		"chrome":     chromeMimic,
+		"chrome83":   chromeMimic,
+		"firefox":    firefoxMimic,
+		"firefox145": firefox145Mimic,
 	}
 )
 

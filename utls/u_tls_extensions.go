@@ -5,8 +5,13 @@
 package tls
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+
+	"github.com/refraction-networking/utls/dicttls"
+	"golang.org/x/crypto/cryptobyte"
 )
 
 type TLSExtension interface {
@@ -365,8 +370,8 @@ func (e *SessionTicketExtension) Read(b []byte) (int, error) {
 }
 
 type GenericExtension struct {
-	id   uint16
-	data []byte
+	Id   uint16
+	Data []byte
 }
 
 func (e *GenericExtension) writeToUConn(uc *UConn) error {
@@ -374,7 +379,7 @@ func (e *GenericExtension) writeToUConn(uc *UConn) error {
 }
 
 func (e *GenericExtension) Len() int {
-	return 4 + len(e.data)
+	return 4 + len(e.Data)
 }
 
 func (e *GenericExtension) Read(b []byte) (int, error) {
@@ -382,12 +387,12 @@ func (e *GenericExtension) Read(b []byte) (int, error) {
 		return 0, io.ErrShortBuffer
 	}
 
-	b[0] = byte(e.id >> 8)
-	b[1] = byte(e.id)
-	b[2] = byte(len(e.data) >> 8)
-	b[3] = byte(len(e.data))
-	if len(e.data) > 0 {
-		copy(b[4:], e.data)
+	b[0] = byte(e.Id >> 8)
+	b[1] = byte(e.Id)
+	b[2] = byte(len(e.Data) >> 8)
+	b[3] = byte(len(e.Data))
+	if len(e.Data) > 0 {
+		copy(b[4:], e.Data)
 	}
 	return e.Len(), io.EOF
 }
@@ -740,7 +745,6 @@ func (e *FakeRecordSizeLimitExtension) Read(b []byte) (int, error) {
 	return e.Len(), io.EOF
 }
 
-
 type FakeApplicationSettingsExtension struct {
 }
 
@@ -772,4 +776,79 @@ func (e *FakeApplicationSettingsExtension) Read(b []byte) (int, error) {
 	b[8] = byte(0x32)
 
 	return e.Len(), io.EOF
+}
+
+type FakeDelegatedCredentialsExtension struct {
+	SupportedSignatureAlgorithms []SignatureScheme
+}
+
+func (e *FakeDelegatedCredentialsExtension) writeToUConn(uc *UConn) error {
+	return nil
+}
+
+func (e *FakeDelegatedCredentialsExtension) Len() int {
+	return 6 + 2*len(e.SupportedSignatureAlgorithms)
+}
+
+func (e *FakeDelegatedCredentialsExtension) Read(b []byte) (int, error) {
+	if len(b) < e.Len() {
+		return 0, io.ErrShortBuffer
+	}
+	// https://datatracker.ietf.org/doc/html/draft-ietf-tls-subcerts-15#section-4.1.1
+	b[0] = byte(fakeExtensionDelegatedCredentials >> 8)
+	b[1] = byte(fakeExtensionDelegatedCredentials)
+	b[2] = byte((2 + 2*len(e.SupportedSignatureAlgorithms)) >> 8)
+	b[3] = byte((2 + 2*len(e.SupportedSignatureAlgorithms)))
+	b[4] = byte((2 * len(e.SupportedSignatureAlgorithms)) >> 8)
+	b[5] = byte((2 * len(e.SupportedSignatureAlgorithms)))
+	for i, sigAndHash := range e.SupportedSignatureAlgorithms {
+		b[6+2*i] = byte(sigAndHash >> 8)
+		b[7+2*i] = byte(sigAndHash)
+	}
+	return e.Len(), io.EOF
+}
+
+func (e *FakeDelegatedCredentialsExtension) Write(b []byte) (int, error) {
+	fullLen := len(b)
+	extData := cryptobyte.String(b)
+	//https://datatracker.ietf.org/doc/html/draft-ietf-tls-subcerts-15#section-4.1.1
+	var supportedAlgs cryptobyte.String
+	if !extData.ReadUint16LengthPrefixed(&supportedAlgs) || supportedAlgs.Empty() {
+		return 0, errors.New("unable to read signature algorithms extension data")
+	}
+	supportedSignatureAlgorithms := []SignatureScheme{}
+	for !supportedAlgs.Empty() {
+		var sigAndAlg uint16
+		if !supportedAlgs.ReadUint16(&sigAndAlg) {
+			return 0, errors.New("unable to read signature algorithms extension data")
+		}
+		supportedSignatureAlgorithms = append(
+			supportedSignatureAlgorithms, SignatureScheme(sigAndAlg))
+	}
+	e.SupportedSignatureAlgorithms = supportedSignatureAlgorithms
+	return fullLen, nil
+}
+
+// Implementation copied from SignatureAlgorithmsExtension.UnmarshalJSON
+func (e *FakeDelegatedCredentialsExtension) UnmarshalJSON(data []byte) error {
+	var signatureAlgorithms struct {
+		Algorithms []string `json:"supported_signature_algorithms"`
+	}
+	if err := json.Unmarshal(data, &signatureAlgorithms); err != nil {
+		return err
+	}
+
+	for _, sigScheme := range signatureAlgorithms.Algorithms {
+		if sigScheme == "GREASE" {
+			e.SupportedSignatureAlgorithms = append(e.SupportedSignatureAlgorithms, GREASE_PLACEHOLDER)
+			continue
+		}
+
+		if scheme, ok := dicttls.DictSignatureSchemeNameIndexed[sigScheme]; ok {
+			e.SupportedSignatureAlgorithms = append(e.SupportedSignatureAlgorithms, SignatureScheme(scheme))
+		} else {
+			return fmt.Errorf("unknown delegated credentials signature scheme: %s", sigScheme)
+		}
+	}
+	return nil
 }

@@ -46,6 +46,8 @@ const (
 
 // newest signatures
 var (
+	fakeExtensionDelegatedCredentials uint16 = 34
+
 	FakePKCS1WithSHA224 SignatureScheme = 0x0301
 	FakeECDSAWithSHA224 SignatureScheme = 0x0303
 
@@ -65,6 +67,7 @@ type CertCompressionAlgo uint16
 const (
 	CertCompressionZlib   CertCompressionAlgo = 0x0001
 	CertCompressionBrotli CertCompressionAlgo = 0x0002
+	CertCompressionZstd   CertCompressionAlgo = 0x0003
 )
 
 const (
